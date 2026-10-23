@@ -1,0 +1,29 @@
+{
+  "source": "live-provider-commentary",
+  "sessionId": "sesn_01EbQjyWBT2XoaW92k7pgu9B",
+  "answer": "This local experiment, titled **\"Plans, Task Boards and Completion Gates,\"** demonstrates a structured workflow where a task moves through defined steps: checking a board revision, verifying dependency closure, confirming artifact binding, and atomically advancing the board. The outcome is recorded as \"passed,\" with a completion status tied to a specific artifact hash and evidence ID. It illustrates how a task board can enforce completion gates by requiring matching evidence before a task is marked done.",
+  "stopReason": "end_turn",
+  "eventTypes": [
+    "session.status_running",
+    "session.thread_status_running",
+    "user.message",
+    "span.model_request_start",
+    "agent.thinking",
+    "agent.message",
+    "span.model_request_end",
+    "session.thread_status_idle",
+    "session.usage",
+    "session.status_idle"
+  ],
+  "requestUsage": [
+    {
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 624,
+      "output_tokens": 130,
+      "speed": "standard"
+    }
+  ],
+  "experimentHash": "041b804caee273aa155245d4bf8283529328bce3fd95459c9056fd6b95b47e02",
+  "scope": "A real text-only model response about the local experiment. External integrations and the experiment's correctness are not certified by this response."
+}

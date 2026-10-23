@@ -1,0 +1,13 @@
+{
+  "lesson": "C38",
+  "title": "Plans, Task Boards and Completion Gates",
+  "path": "lesson-c38\\lesson-c38-app",
+  "port": 3038,
+  "scenarios": 4,
+  "state": "implemented and verified",
+  "liveScope": "text-only commentary about the local result",
+  "typecheck": true,
+  "localTests": true,
+  "browserSmoke": "passed: desktop, mobile, scenario controls, source view",
+  "liveCommentarySmoke": "passed: real text-only session reached end_turn"
+}

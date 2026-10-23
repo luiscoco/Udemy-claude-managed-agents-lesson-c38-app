@@ -1,0 +1,33 @@
+import { z } from "zod";
+const Update = z.strictObject({ taskId: z.string().min(1), expectedVersion: z.number().int().nonnegative(),
+  status: z.enum(["in_progress", "completed"]), evidenceId: z.string().min(1).optional() });
+export type Task = { status: "pending" | "in_progress" | "completed"; deps: string[];
+  artifactHash: string; evidenceId?: string };
+export type Board = { id: string; version: number; tasks: Map<string, Task> };
+export type Evidence = { boardId: string; taskId: string; artifactHash: string;
+  testsPassed: boolean; checkerVersion: string };
+// Caller authorizes the board. Evidence is written only by a trusted verifier.
+// Function is synchronous and atomic only inside one process; use a database
+// transaction/CAS for durable multi-worker board and evidence state.
+export function updateTask(raw: unknown, board: Board, evidence: ReadonlyMap<string, Evidence>) {
+  const input = Update.parse(raw);
+  if (input.expectedVersion !== board.version) throw new Error("Stale board version");
+  const task = board.tasks.get(input.taskId);
+  if (!task) throw new Error("Unknown task");
+  if (task.status === "completed") throw new Error("Completed task is immutable in this example");
+  if (input.status === "completed") {
+    if (task.status !== "in_progress") throw new Error("Start task first");
+    for (const dep of task.deps)
+      if (board.tasks.get(dep)?.status !== "completed") throw new Error("Blocked dependency");
+    const proof = evidence.get(input.evidenceId ?? "");
+    if (!proof || proof.boardId !== board.id || proof.taskId !== input.taskId ||
+        proof.artifactHash !== task.artifactHash || !proof.testsPassed || !proof.checkerVersion)
+      throw new Error("Missing, failing or stale evidence");
+  } else if (input.evidenceId) throw new Error("Evidence only accepted at completion");
+  board.tasks.set(input.taskId, { ...task, status: input.status, evidenceId: input.evidenceId });
+  board.version += 1;
+  return { success: true, version: board.version, taskId: input.taskId };
+}
+// Provisioning must validate dependency cycles and missing task IDs.
+// Artifact changes must invalidate affected proofs and completed descendants
+// through an explicit revision workflow; this example disallows silent reopening.
