@@ -42,28 +42,79 @@ CLAUDE_MANAGED_ENVIRONMENT_ID=your_environment_id
 PORT=3038
 ```
 
-## How the application was developed
+## How the app was build
 
-The browser collects inputs; the Node host validates requests; the lesson implementation produces observable evidence. The architecture page walks through the real source with numbered steps, prerequisite configuration, source filenames and code excerpts.
+### 1. Check board revision and predecessor completion
 
-### Lesson implementation
+A stale expected board version returns conflict. An unfinished dependency pauses completion before any artifact evidence is accepted.
 
-[src/lesson.ts](https://github.com/luiscoco/Udemy-claude-managed-agents-lesson-c38-app/blob/main/src/lesson.ts)
+Source: [src/lesson.ts](src/lesson.ts#L13) · selected statements
 
 ```typescript
-  async run(input) {
+if (number(input, "expectedVersion") !== 3)
+  return report("conflict", "Board version changed", { version: 3 }, [
+    "Compare the expected board revision",
+  ]);
 
-if(number(input,"expectedVersion")!==3)return report("conflict","Board version changed",{version:3},["Compare the expected board revision"]);
-if(!flag(input,"dependencyComplete"))return report("paused","A required predecessor is not completed",{version:3},["Check dependencies before completion"]);
-const artifactHash=hash(text(input,"artifact")),verifiedHash=hash("reviewed code");
-if(artifactHash!==verifiedHash)return report("rejected","Evidence refers to different artifact bytes",{version:3},["Bind trusted verifier evidence to the current artifact"]);
-return report("passed","Completed the active task with matching evidence",{version:4,status:"completed",artifactHash,evidenceId:"proof-demo-1"},["Check board revision","Check dependency closure","Check verifier artifact binding","Atomically advance the local board"]);
-
-  }
-};
+if (!flag(input, "dependencyComplete"))
+  return report(
+    "paused",
+    "A required predecessor is not completed",
+    { version: 3 },
+    ["Check dependencies before completion"],
+  );
 ```
 
-Read the architecture page for the remaining source excerpts and explanations, including input handling and optional provider behavior. The diagram describes this application, rather than implying that an external integration has been implemented.
+### 2. Bind completion to the verified artifact
+
+The artifact hash must equal the independently seeded reviewed-code hash. Only then does the local result advance the board from version 3 to 4 with a completion status and evidence ID.
+
+Source: [src/lesson.ts](src/lesson.ts#L15) · selected statements
+
+```typescript
+const artifactHash = hash(text(input, "artifact")),
+  verifiedHash = hash("reviewed code");
+
+if (artifactHash !== verifiedHash)
+  return report(
+    "rejected",
+    "Evidence refers to different artifact bytes",
+    { version: 3 },
+    ["Bind trusted verifier evidence to the current artifact"],
+  );
+
+return report(
+  "passed",
+  "Completed the active task with matching evidence",
+  { version: 4, status: "completed", artifactHash, evidenceId: "proof-demo-1" },
+  [
+    "Check board revision",
+    "Check dependency closure",
+    "Check verifier artifact binding",
+    "Atomically advance the local board",
+  ],
+);
+```
+
+### Check your understanding
+
+Run **Complete a verified task** in the application. Compare the result with these scenario expectations:
+
+```json
+{
+  "input": {
+    "expectedVersion": 3,
+    "dependencyComplete": true,
+    "artifact": "reviewed code"
+  },
+  "expectedOutcome": "passed",
+  "checkEvidence": {
+    "version": 4
+  }
+}
+```
+
+Then try **Reject a stale board update**. Its expected outcome is `conflict`; identify the condition or evidence field that explains the difference.
 
 ## Validation
 
